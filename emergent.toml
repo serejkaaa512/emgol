@@ -1,0 +1,36 @@
+# emgol — Emergent Ecosystem: Stage 0 bootstrap
+
+# This file boots the engine with a single heartbeat source + log sink.
+# Full game topology lands in Stage 2 (PLAN.md). Stage 0 proves:
+#   emergent --config ./emergent.toml  (or: emergent -c emergent.toml) starts clean.
+
+[engine]
+name = "emgol"
+socket_path = "auto"
+api_port = 8891
+
+[event_store]
+json_log_dir = "auto"
+sqlite_path = "auto"
+retention_days = 30
+
+# --- Sources ---------------------------------------------------------------
+# game-clock (Stage 0 stub): heartbeat every 2s.
+# Emits `exec.output` with {command, stdout, exit_code}; stdout is JSON text.
+# Stage 2 replaces stdout payload with {tick_id, global_conditions}
+# and renames the stream to `world.tick_elapsed` via an exec-handler.
+
+[[sources]]
+name = "game-clock"
+path = "~/.local/share/emergent/primitives/bin/exec-source"
+args = ["--shell", "sh", "--command", "date +%s", "--interval", "2000"]
+publishes = ["exec.output"]
+
+# --- Sinks -----------------------------------------------------------------
+# tick-log: fire-and-forget logger. Proves events flow end-to-end.
+
+[[sinks]]
+name = "tick-log"
+path = "~/.local/share/emergent/primitives/bin/exec-sink"
+args = ["-s", "exec.output", "--", "jq", "-c", "{tick: .stdout}"]
+subscribes = ["exec.output"]

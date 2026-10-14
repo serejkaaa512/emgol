@@ -1,0 +1,5 @@
+/tmp/emgol-tick.log
+/tmp/emgol-tick.pid
+__pycache__/
+.venv/
+ecosystem_events.db
